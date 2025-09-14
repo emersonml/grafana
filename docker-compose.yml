@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  grafana:
+    hostname: grafana
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "9019:3000"
+    user: "472:472" # evita permissões quebradas no volume
+    environment:
+      # Carrega do .env (crie ao lado do compose)
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000}
+      # Instale plugins separados por vírgula (ex.: grafana-clock-panel,grafana-piechart-panel)
+      GF_INSTALL_PLUGINS: ${GRAFANA_PLUGINS:-}
+      
+    volumes:
+      - /srv/volumes/grafana/data:/var/lib/grafana
+      - /srv/volumes/grafana/provisioning:/etc/grafana/provisioning
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
